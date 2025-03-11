@@ -1,11 +1,8 @@
-package grpc
+package services
 
 import (
 	"context"
 	"fmt"
-	"github.com/dapplink-labs/wallet-chain-btc/bitcoin"
-	"github.com/dapplink-labs/wallet-chain-btc/bitcoin/base"
-	"github.com/dapplink-labs/wallet-chain-btc/config"
 	"net"
 	"sync/atomic"
 
@@ -13,6 +10,9 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/dapplink-labs/wallet-chain-btc/bitcoin"
+	"github.com/dapplink-labs/wallet-chain-btc/bitcoin/base"
+	"github.com/dapplink-labs/wallet-chain-btc/config"
 	"github.com/dapplink-labs/wallet-chain-btc/proto/btc"
 )
 
@@ -29,7 +29,8 @@ type WalletBtcService struct {
 	stopped atomic.Bool
 }
 
-func NewMarketRpcService(conf *config.Config) (*WalletBtcService, error) {
+func NewBitcoinRpcService(conf *config.Config) (*WalletBtcService, error) {
+	log.Info("Config info", "RpcUrl", conf.BtcNode.RpcUrl, "RpcUser", conf.BtcNode.RpcUser, "RpcPass", conf.BtcNode.RpcPass)
 	baseClient, err := base.NewBaseClient(conf.BtcNode.RpcUrl, conf.BtcNode.RpcUser, conf.BtcNode.RpcPass)
 	if err != nil {
 		log.Error("new bitcoin rpc client fail", "err", err)
@@ -56,7 +57,8 @@ func NewMarketRpcService(conf *config.Config) (*WalletBtcService, error) {
 
 func (wbs *WalletBtcService) Start(ctx context.Context) error {
 	go func(wbs *WalletBtcService) {
-		rpcAddr := fmt.Sprintf("%s:%d", wbs.RpcEndPoint, wbs.RpcPort)
+		rpcAddr := fmt.Sprintf("%s:%s", wbs.RpcEndPoint, wbs.RpcPort)
+		log.Info("Rpc address", "rpcAddr", rpcAddr)
 		listener, err := net.Listen("tcp", rpcAddr)
 		if err != nil {
 			log.Error("Could not start tcp listener. ")

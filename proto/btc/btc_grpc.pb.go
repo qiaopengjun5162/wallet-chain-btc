@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v4.25.3
-// source: dapplink/btc.proto
+// source: proto/btc.proto
 
 package btc
 
@@ -19,23 +19,23 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	WalletBtcService_GetSupportChains_FullMethodName        = "/dapplink.btc.WalletBtcService/getSupportChains"
-	WalletBtcService_ConvertAddress_FullMethodName          = "/dapplink.btc.WalletBtcService/convertAddress"
-	WalletBtcService_ValidAddress_FullMethodName            = "/dapplink.btc.WalletBtcService/validAddress"
-	WalletBtcService_GetFee_FullMethodName                  = "/dapplink.btc.WalletBtcService/getFee"
-	WalletBtcService_GetAccount_FullMethodName              = "/dapplink.btc.WalletBtcService/getAccount"
-	WalletBtcService_GetUnspentOutputs_FullMethodName       = "/dapplink.btc.WalletBtcService/getUnspentOutputs"
-	WalletBtcService_GetBlockByNumber_FullMethodName        = "/dapplink.btc.WalletBtcService/getBlockByNumber"
-	WalletBtcService_GetBlockByHash_FullMethodName          = "/dapplink.btc.WalletBtcService/getBlockByHash"
-	WalletBtcService_GetBlockHeaderByHash_FullMethodName    = "/dapplink.btc.WalletBtcService/getBlockHeaderByHash"
-	WalletBtcService_GetBlockHeaderByNumber_FullMethodName  = "/dapplink.btc.WalletBtcService/getBlockHeaderByNumber"
-	WalletBtcService_SendTx_FullMethodName                  = "/dapplink.btc.WalletBtcService/SendTx"
-	WalletBtcService_GetTxByAddress_FullMethodName          = "/dapplink.btc.WalletBtcService/getTxByAddress"
-	WalletBtcService_GetTxByHash_FullMethodName             = "/dapplink.btc.WalletBtcService/getTxByHash"
-	WalletBtcService_CreateUnSignTransaction_FullMethodName = "/dapplink.btc.WalletBtcService/createUnSignTransaction"
-	WalletBtcService_BuildSignedTransaction_FullMethodName  = "/dapplink.btc.WalletBtcService/buildSignedTransaction"
-	WalletBtcService_DecodeTransaction_FullMethodName       = "/dapplink.btc.WalletBtcService/decodeTransaction"
-	WalletBtcService_VerifySignedTransaction_FullMethodName = "/dapplink.btc.WalletBtcService/verifySignedTransaction"
+	WalletBtcService_GetSupportChains_FullMethodName        = "/WalletBtcService/getSupportChains"
+	WalletBtcService_ConvertAddress_FullMethodName          = "/WalletBtcService/convertAddress"
+	WalletBtcService_ValidAddress_FullMethodName            = "/WalletBtcService/validAddress"
+	WalletBtcService_GetFee_FullMethodName                  = "/WalletBtcService/getFee"
+	WalletBtcService_GetAccount_FullMethodName              = "/WalletBtcService/getAccount"
+	WalletBtcService_GetUnspentOutputs_FullMethodName       = "/WalletBtcService/getUnspentOutputs"
+	WalletBtcService_GetBlockByNumber_FullMethodName        = "/WalletBtcService/getBlockByNumber"
+	WalletBtcService_GetBlockByHash_FullMethodName          = "/WalletBtcService/getBlockByHash"
+	WalletBtcService_GetBlockHeaderByHash_FullMethodName    = "/WalletBtcService/getBlockHeaderByHash"
+	WalletBtcService_GetBlockHeaderByNumber_FullMethodName  = "/WalletBtcService/getBlockHeaderByNumber"
+	WalletBtcService_SendTx_FullMethodName                  = "/WalletBtcService/SendTx"
+	WalletBtcService_GetTxByAddress_FullMethodName          = "/WalletBtcService/getTxByAddress"
+	WalletBtcService_GetTxByHash_FullMethodName             = "/WalletBtcService/getTxByHash"
+	WalletBtcService_BuildUnSignTransaction_FullMethodName  = "/WalletBtcService/buildUnSignTransaction"
+	WalletBtcService_BuildSignedTransaction_FullMethodName  = "/WalletBtcService/buildSignedTransaction"
+	WalletBtcService_DecodeTransaction_FullMethodName       = "/WalletBtcService/decodeTransaction"
+	WalletBtcService_VerifySignedTransaction_FullMethodName = "/WalletBtcService/verifySignedTransaction"
 )
 
 // WalletBtcServiceClient is the client API for WalletBtcService service.
@@ -55,7 +55,7 @@ type WalletBtcServiceClient interface {
 	SendTx(ctx context.Context, in *SendTxRequest, opts ...grpc.CallOption) (*SendTxResponse, error)
 	GetTxByAddress(ctx context.Context, in *TxAddressRequest, opts ...grpc.CallOption) (*TxAddressResponse, error)
 	GetTxByHash(ctx context.Context, in *TxHashRequest, opts ...grpc.CallOption) (*TxHashResponse, error)
-	CreateUnSignTransaction(ctx context.Context, in *UnSignTransactionRequest, opts ...grpc.CallOption) (*UnSignTransactionResponse, error)
+	BuildUnSignTransaction(ctx context.Context, in *UnSignTransactionRequest, opts ...grpc.CallOption) (*UnSignTransactionResponse, error)
 	BuildSignedTransaction(ctx context.Context, in *SignedTransactionRequest, opts ...grpc.CallOption) (*SignedTransactionResponse, error)
 	DecodeTransaction(ctx context.Context, in *DecodeTransactionRequest, opts ...grpc.CallOption) (*DecodeTransactionResponse, error)
 	VerifySignedTransaction(ctx context.Context, in *VerifyTransactionRequest, opts ...grpc.CallOption) (*VerifyTransactionResponse, error)
@@ -199,10 +199,10 @@ func (c *walletBtcServiceClient) GetTxByHash(ctx context.Context, in *TxHashRequ
 	return out, nil
 }
 
-func (c *walletBtcServiceClient) CreateUnSignTransaction(ctx context.Context, in *UnSignTransactionRequest, opts ...grpc.CallOption) (*UnSignTransactionResponse, error) {
+func (c *walletBtcServiceClient) BuildUnSignTransaction(ctx context.Context, in *UnSignTransactionRequest, opts ...grpc.CallOption) (*UnSignTransactionResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UnSignTransactionResponse)
-	err := c.cc.Invoke(ctx, WalletBtcService_CreateUnSignTransaction_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, WalletBtcService_BuildUnSignTransaction_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -256,7 +256,7 @@ type WalletBtcServiceServer interface {
 	SendTx(context.Context, *SendTxRequest) (*SendTxResponse, error)
 	GetTxByAddress(context.Context, *TxAddressRequest) (*TxAddressResponse, error)
 	GetTxByHash(context.Context, *TxHashRequest) (*TxHashResponse, error)
-	CreateUnSignTransaction(context.Context, *UnSignTransactionRequest) (*UnSignTransactionResponse, error)
+	BuildUnSignTransaction(context.Context, *UnSignTransactionRequest) (*UnSignTransactionResponse, error)
 	BuildSignedTransaction(context.Context, *SignedTransactionRequest) (*SignedTransactionResponse, error)
 	DecodeTransaction(context.Context, *DecodeTransactionRequest) (*DecodeTransactionResponse, error)
 	VerifySignedTransaction(context.Context, *VerifyTransactionRequest) (*VerifyTransactionResponse, error)
@@ -308,8 +308,8 @@ func (UnimplementedWalletBtcServiceServer) GetTxByAddress(context.Context, *TxAd
 func (UnimplementedWalletBtcServiceServer) GetTxByHash(context.Context, *TxHashRequest) (*TxHashResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTxByHash not implemented")
 }
-func (UnimplementedWalletBtcServiceServer) CreateUnSignTransaction(context.Context, *UnSignTransactionRequest) (*UnSignTransactionResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateUnSignTransaction not implemented")
+func (UnimplementedWalletBtcServiceServer) BuildUnSignTransaction(context.Context, *UnSignTransactionRequest) (*UnSignTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BuildUnSignTransaction not implemented")
 }
 func (UnimplementedWalletBtcServiceServer) BuildSignedTransaction(context.Context, *SignedTransactionRequest) (*SignedTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BuildSignedTransaction not implemented")
@@ -574,20 +574,20 @@ func _WalletBtcService_GetTxByHash_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _WalletBtcService_CreateUnSignTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _WalletBtcService_BuildUnSignTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UnSignTransactionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(WalletBtcServiceServer).CreateUnSignTransaction(ctx, in)
+		return srv.(WalletBtcServiceServer).BuildUnSignTransaction(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: WalletBtcService_CreateUnSignTransaction_FullMethodName,
+		FullMethod: WalletBtcService_BuildUnSignTransaction_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(WalletBtcServiceServer).CreateUnSignTransaction(ctx, req.(*UnSignTransactionRequest))
+		return srv.(WalletBtcServiceServer).BuildUnSignTransaction(ctx, req.(*UnSignTransactionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -650,7 +650,7 @@ func _WalletBtcService_VerifySignedTransaction_Handler(srv interface{}, ctx cont
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var WalletBtcService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "dapplink.btc.WalletBtcService",
+	ServiceName: "WalletBtcService",
 	HandlerType: (*WalletBtcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -706,8 +706,8 @@ var WalletBtcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _WalletBtcService_GetTxByHash_Handler,
 		},
 		{
-			MethodName: "createUnSignTransaction",
-			Handler:    _WalletBtcService_CreateUnSignTransaction_Handler,
+			MethodName: "buildUnSignTransaction",
+			Handler:    _WalletBtcService_BuildUnSignTransaction_Handler,
 		},
 		{
 			MethodName: "buildSignedTransaction",
@@ -723,5 +723,5 @@ var WalletBtcService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "dapplink/btc.proto",
+	Metadata: "proto/btc.proto",
 }

@@ -1,4 +1,4 @@
-package grpc
+package services
 
 import (
 	"bytes"
@@ -23,13 +23,12 @@ import (
 	"github.com/btcsuite/btcd/wire"
 
 	"github.com/dapplink-labs/wallet-chain-btc/proto/btc"
-	common2 "github.com/dapplink-labs/wallet-chain-btc/proto/common"
 	"github.com/dapplink-labs/wallet-chain-utxo/chain/bitcoin/types"
 )
 
 func (wbs *WalletBtcService) GetSupportChains(ctx context.Context, req *btc.SupportChainsRequest) (*btc.SupportChainsResponse, error) {
 	return &btc.SupportChainsResponse{
-		Code:    common2.ReturnCode_SUCCESS,
+		Code:    btc.ReturnCode_SUCCESS,
 		Msg:     "Support this chain",
 		Support: true,
 	}, nil
@@ -86,7 +85,7 @@ func (wbs *WalletBtcService) ConvertAddress(ctx context.Context, req *btc.Conver
 		return nil, errors.New("Do not support address type")
 	}
 	return &btc.ConvertAddressResponse{
-		Code:    common2.ReturnCode_SUCCESS,
+		Code:    btc.ReturnCode_SUCCESS,
 		Msg:     "create address success",
 		Address: address,
 	}, nil
@@ -96,18 +95,18 @@ func (wbs *WalletBtcService) ValidAddress(ctx context.Context, req *btc.ValidAdd
 	address, err := btcutil.DecodeAddress(req.Address, &chaincfg.MainNetParams)
 	if err != nil {
 		return &btc.ValidAddressResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, nil
 	}
 	if !address.IsForNet(&chaincfg.MainNetParams) {
 		return &btc.ValidAddressResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "address is not valid for this network",
 		}, nil
 	}
 	return &btc.ValidAddressResponse{
-		Code:  common2.ReturnCode_SUCCESS,
+		Code:  btc.ReturnCode_SUCCESS,
 		Msg:   "verify address success",
 		Valid: true,
 	}, nil
@@ -117,12 +116,12 @@ func (wbs *WalletBtcService) GetFee(ctx context.Context, req *btc.FeeRequest) (*
 	gasFeeResp, err := wbs.btcDataClient.GetFee()
 	if err != nil {
 		return &btc.FeeResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
 	return &btc.FeeResponse{
-		Code:       common2.ReturnCode_SUCCESS,
+		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "get fee success",
 		BestFee:    gasFeeResp.BestTransactionFee,
 		BestFeeSat: gasFeeResp.BestTransactionFeeSat,
@@ -136,13 +135,13 @@ func (wbs *WalletBtcService) GetAccount(ctx context.Context, req *btc.AccountReq
 	balance, err := wbs.thirdPartClient.GetAccountBalance(req.Address)
 	if err != nil {
 		return &btc.AccountResponse{
-			Code:    common2.ReturnCode_ERROR,
+			Code:    btc.ReturnCode_ERROR,
 			Msg:     "get btc balance fail",
 			Balance: "0",
 		}, err
 	}
 	return &btc.AccountResponse{
-		Code:    common2.ReturnCode_SUCCESS,
+		Code:    btc.ReturnCode_SUCCESS,
 		Msg:     "get btc balance success",
 		Balance: balance,
 	}, nil
@@ -152,7 +151,7 @@ func (wbs *WalletBtcService) GetUnspentOutputs(ctx context.Context, req *btc.Uns
 	utxoList, err := wbs.thirdPartClient.GetAccountUtxo(req.Address)
 	if err != nil {
 		return &btc.UnspentOutputsResponse{
-			Code:           common2.ReturnCode_ERROR,
+			Code:           btc.ReturnCode_ERROR,
 			Msg:            err.Error(),
 			UnspentOutputs: nil,
 		}, err
@@ -170,7 +169,7 @@ func (wbs *WalletBtcService) GetUnspentOutputs(ctx context.Context, req *btc.Uns
 		unspentOutputList = append(unspentOutputList, unspentOutput)
 	}
 	return &btc.UnspentOutputsResponse{
-		Code:           common2.ReturnCode_SUCCESS,
+		Code:           btc.ReturnCode_SUCCESS,
 		Msg:            "get unspent outputs success",
 		UnspentOutputs: unspentOutputList,
 	}, nil
@@ -181,7 +180,7 @@ func (wbs *WalletBtcService) GetBlockByNumber(ctx context.Context, req *btc.Bloc
 	if err != nil {
 		log.Error("get block hash by number fail", "err", err)
 		return &btc.BlockResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "get block hash fail",
 		}, err
 	}
@@ -235,7 +234,7 @@ func (wbs *WalletBtcService) GetBlockByNumber(ctx context.Context, req *btc.Bloc
 		txList = append(txList, txItem)
 	}
 	return &btc.BlockResponse{
-		Code:   common2.ReturnCode_SUCCESS,
+		Code:   btc.ReturnCode_SUCCESS,
 		Msg:    "get block by number succcess",
 		Height: uint64(req.Height),
 		Hash:   blockHash.String(),
@@ -294,7 +293,7 @@ func (wbs *WalletBtcService) GetBlockByHash(ctx context.Context, req *btc.BlockH
 		txList = append(txList, txItem)
 	}
 	return &btc.BlockResponse{
-		Code:   common2.ReturnCode_SUCCESS,
+		Code:   btc.ReturnCode_SUCCESS,
 		Msg:    "get block by number succcess",
 		Height: resultBlock.Height,
 		Hash:   req.Hash,
@@ -310,12 +309,12 @@ func (wbs *WalletBtcService) GetBlockHeaderByHash(ctx context.Context, req *btc.
 	blockHeader, err := wbs.btcClient.Client.GetBlockHeader(hash)
 	if err != nil {
 		return &btc.BlockHeaderResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "get block header fail",
 		}, err
 	}
 	return &btc.BlockHeaderResponse{
-		Code:       common2.ReturnCode_SUCCESS,
+		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "get block header success",
 		ParentHash: blockHeader.PrevBlock.String(),
 		Number:     string(blockHeader.Version),
@@ -330,7 +329,7 @@ func (wbs *WalletBtcService) GetBlockHeaderByNumber(ctx context.Context, req *bt
 		latestBlock, err := wbs.btcClient.Client.GetBlockCount()
 		if err != nil {
 			return &btc.BlockHeaderResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  "get latest block fail",
 			}, err
 		}
@@ -340,19 +339,19 @@ func (wbs *WalletBtcService) GetBlockHeaderByNumber(ctx context.Context, req *bt
 	if err != nil {
 		log.Error("get block hash by number fail", "err", err)
 		return &btc.BlockHeaderResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "get block hash fail",
 		}, err
 	}
 	blockHeader, err := wbs.btcClient.Client.GetBlockHeader(blockHash)
 	if err != nil {
 		return &btc.BlockHeaderResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "get block header fail",
 		}, err
 	}
 	return &btc.BlockHeaderResponse{
-		Code:       common2.ReturnCode_SUCCESS,
+		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "get block header success",
 		ParentHash: blockHeader.PrevBlock.String(),
 		Number:     strconv.FormatInt(blockNumber, 10),
@@ -367,14 +366,14 @@ func (wbs *WalletBtcService) SendTx(ctx context.Context, req *btc.SendTxRequest)
 	err := msgTx.Deserialize(r)
 	if err != nil {
 		return &btc.SendTxResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
 	txHash, err := wbs.btcClient.SendRawTransaction(&msgTx, true)
 	if err != nil {
 		return &btc.SendTxResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
@@ -382,7 +381,7 @@ func (wbs *WalletBtcService) SendTx(ctx context.Context, req *btc.SendTxRequest)
 		log.Error("broadcast transaction, tx hash mismatch", "local hash", msgTx.TxHash().String(), "hash from net", txHash.String(), "signedTx", req.RawTx)
 	}
 	return &btc.SendTxResponse{
-		Code:   common2.ReturnCode_SUCCESS,
+		Code:   btc.ReturnCode_SUCCESS,
 		Msg:    "send tx success",
 		TxHash: txHash.String(),
 	}, nil
@@ -392,7 +391,7 @@ func (wbs *WalletBtcService) GetTxByAddress(ctx context.Context, req *btc.TxAddr
 	transaction, err := wbs.thirdPartClient.GetTransactionsByAddress(req.Address, strconv.Itoa(int(req.Page)), strconv.Itoa(int(req.Pagesize)))
 	if err != nil {
 		return &btc.TxAddressResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "get transaction list fail",
 			Tx:   nil,
 		}, err
@@ -431,7 +430,7 @@ func (wbs *WalletBtcService) GetTxByAddress(ctx context.Context, req *btc.TxAddr
 		tx_list = append(tx_list, tx)
 	}
 	return &btc.TxAddressResponse{
-		Code: common2.ReturnCode_SUCCESS,
+		Code: btc.ReturnCode_SUCCESS,
 		Msg:  "get transaction list success",
 		Tx:   tx_list,
 	}, nil
@@ -441,7 +440,7 @@ func (wbs *WalletBtcService) GetTxByHash(ctx context.Context, req *btc.TxHashReq
 	transaction, err := wbs.thirdPartClient.GetTransactionsByHash(req.Hash)
 	if err != nil {
 		return &btc.TxHashResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  "get transaction list fail",
 			Tx:   nil,
 		}, err
@@ -470,20 +469,20 @@ func (wbs *WalletBtcService) GetTxByHash(ctx context.Context, req *btc.TxHashReq
 		Datetime: datetime,
 	}
 	return &btc.TxHashResponse{
-		Code: common2.ReturnCode_SUCCESS,
+		Code: btc.ReturnCode_SUCCESS,
 		Msg:  "get transaction success",
 		Tx:   txMsg,
 	}, nil
 }
 
-func (wbs *WalletBtcService) CreateUnSignTransaction(ctx context.Context, req *btc.UnSignTransactionRequest) (*btc.UnSignTransactionResponse, error) {
+func (wbs *WalletBtcService) BuildUnSignTransaction(ctx context.Context, req *btc.UnSignTransactionRequest) (*btc.UnSignTransactionResponse, error) {
 	txHash, buf, err := wbs.CalcSignHashes(req.Vin, req.Vout)
 	if err != nil {
 		log.Error("calc sign hashes fail", "err", err)
 		return nil, err
 	}
 	return &btc.UnSignTransactionResponse{
-		Code:       common2.ReturnCode_SUCCESS,
+		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "create un sign transaction success",
 		TxData:     buf,
 		SignHashes: txHash,
@@ -497,7 +496,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 	if err != nil {
 		log.Error("Create signed transaction msg tx deserialize", "err", err)
 		return &btc.SignedTransactionResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
@@ -506,7 +505,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		log.Error("CreateSignedTransaction invalid params", "err", "Signature number mismatch Txin number")
 		err = errors.New("Signature number != Txin number")
 		return &btc.SignedTransactionResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
@@ -515,7 +514,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		log.Error("CreateSignedTransaction invalid params", "err", "Pubkey number mismatch Txin number")
 		err = errors.New("Pubkey number != Txin number")
 		return &btc.SignedTransactionResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
@@ -525,7 +524,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if err2 != nil {
 			log.Error("CreateSignedTransaction ParsePubKey", "err", err2)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
@@ -540,7 +539,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if err2 != nil {
 			log.Error("CreateSignedTransaction GetRawTransactionVerbose", "err", err2)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
@@ -551,7 +550,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if err2 != nil {
 			log.Error("CreateSignedTransaction DecodeAddress", "err", err2)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
@@ -559,7 +558,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if err2 != nil {
 			log.Error("CreateSignedTransaction PayToAddrScript", "err", err2)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
@@ -567,7 +566,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if len(req.Signatures[i]) < 64 {
 			err2 = errors.New("Invalid signature length")
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
@@ -581,7 +580,7 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if err2 != nil {
 			log.Error("create signed transaction new script builder", "err", err2)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
@@ -593,14 +592,14 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 		if err2 != nil {
 			log.Error("create signed transaction newEngine", "err", err2)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err2.Error(),
 			}, err2
 		}
 		if err3 := vm.Execute(); err3 != nil {
 			log.Error("CreateSignedTransaction NewEngine Execute", "err", err3)
 			return &btc.SignedTransactionResponse{
-				Code: common2.ReturnCode_ERROR,
+				Code: btc.ReturnCode_ERROR,
 				Msg:  err3.Error(),
 			}, err3
 		}
@@ -611,14 +610,14 @@ func (wbs *WalletBtcService) BuildSignedTransaction(ctx context.Context, req *bt
 	if err != nil {
 		log.Error("CreateSignedTransaction tx Serialize", "err", err)
 		return &btc.SignedTransactionResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
 
 	hash := msgTx.TxHash()
 	return &btc.SignedTransactionResponse{
-		Code:         common2.ReturnCode_SUCCESS,
+		Code:         btc.ReturnCode_SUCCESS,
 		SignedTxData: buf.Bytes(),
 		Hash:         (&hash).CloneBytes(),
 	}, nil
@@ -629,12 +628,12 @@ func (wbs *WalletBtcService) DecodeTransaction(ctx context.Context, req *btc.Dec
 	if err != nil {
 		log.Info("decode tx fail", "err", err)
 		return &btc.DecodeTransactionResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
 	return &btc.DecodeTransactionResponse{
-		Code:       common2.ReturnCode_SUCCESS,
+		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "decode transaction response",
 		SignHashes: res.SignHashes,
 		Status:     btc.TxStatus_Other,
@@ -648,12 +647,12 @@ func (wbs *WalletBtcService) VerifySignedTransaction(ctx context.Context, req *b
 	_, err := wbs.DecodeTx([]byte(""), nil, true)
 	if err != nil {
 		return &btc.VerifyTransactionResponse{
-			Code: common2.ReturnCode_ERROR,
+			Code: btc.ReturnCode_ERROR,
 			Msg:  err.Error(),
 		}, err
 	}
 	return &btc.VerifyTransactionResponse{
-		Code:   common2.ReturnCode_SUCCESS,
+		Code:   btc.ReturnCode_SUCCESS,
 		Msg:    "verify transaction success",
 		Verify: true,
 	}, nil
@@ -683,6 +682,8 @@ func (wbs *WalletBtcService) CalcSignHashes(Vins []*btc.Vin, Vouts []*btc.Vout) 
 		}
 		rawTx.AddTxOut(wire.NewTxOut(out.Amount, toPkScript))
 	}
+	log.Info("raw Transaction", "rawTx", rawTx.SerializeSize())
+
 	signHashes := make([][]byte, len(Vins))
 	for i, in := range Vins {
 		from := in.Address
@@ -701,8 +702,10 @@ func (wbs *WalletBtcService) CalcSignHashes(Vins []*btc.Vin, Vouts []*btc.Vout) 
 			log.Info("Calc signature hash error", "err", err)
 			return nil, nil, err
 		}
+		log.Info("Build sign hash", "signHashHex", hex.EncodeToString(signHash))
 		signHashes[i] = signHash
 	}
+	log.Info("Build transaction success", "rawTx", rawTx.SerializeSize(), "signHashes", signHashes)
 	buf := bytes.NewBuffer(make([]byte, 0, rawTx.SerializeSize()))
 	return signHashes, buf.Bytes(), nil
 }
