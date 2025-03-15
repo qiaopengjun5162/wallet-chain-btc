@@ -18,15 +18,25 @@ enum TxStatus{
 
 message Vin{
   string hash = 1;
-  uint32 index = 2;
+  uint32 vout = 2;
   int64  amount = 3;
   string address = 4;
+  uint64 sequence = 5;
+}
+
+message ScriptPubKey {
+    string asm = 1;
+    string desc =2;
+    string hex = 3;
+    string address = 4;
+    string type = 5;
 }
 
 message Vout{
   string address = 1;
-  int64 amount = 2;
+  string amount = 2;
   uint32 index = 3;
+  ScriptPubKey script_pubKey = 4;
 }
 
 message Address {
@@ -49,17 +59,6 @@ message TxMessage {
   string height = 9;
   string brc20_address = 10;
   string datetime = 11;
-}
-
-message SupportChainsRequest{
-  string consumer_token = 1;
-  string network = 2;
-}
-
-message SupportChainsResponse {
-  ReturnCode code = 1;
-  string msg = 2;
-  bool support = 3;
 }
 
 message ConvertAddressRequest{
@@ -86,23 +85,6 @@ message ValidAddressResponse{
   ReturnCode code = 1;
   string msg = 2;
   bool valid = 3;
-}
-
-message FeeRequest {
-  string consumer_token = 1;
-  string coin = 2;
-  string network = 3;
-  string rawTx = 4;
-}
-
-message FeeResponse {
-  ReturnCode code = 1;
-  string msg = 2;
-  string best_fee = 3;
-  string best_fee_sat = 4;
-  string slow_fee = 5;
-  string normal_fee = 6;
-  string fast_fee = 7;
 }
 
 message AccountRequest{
@@ -152,8 +134,7 @@ message BlockNumberRequest {
 
 message BlockHashRequest {
   string consumer_token = 1;
-  string chain = 2;
-  string hash = 3;
+  string hash = 2;
 }
 
 message TransactionList {
@@ -172,12 +153,10 @@ message BlockResponse{
 }
 
 message BlockHeaderHashRequest{
-  string chain = 1;
   string hash = 2;
 }
 
 message BlockHeaderNumberRequest{
-  string chain = 1;
   string network = 2;
   int64 height = 3;
 }
@@ -185,10 +164,11 @@ message BlockHeaderNumberRequest{
 message BlockHeaderResponse{
   ReturnCode code = 1;
   string msg = 2;
-  string parent_hash = 3;
+  string prev_hash = 3;
   string block_hash = 4;
   string merkle_root = 5;
   string number = 6;
+  uint64 time = 7;
 }
 
 message SendTxRequest{
@@ -267,7 +247,7 @@ message SignedTransactionResponse {
 }
 
 message VerifyTransactionRequest {
-  string chain = 1;
+  string network = 1;
   string public_key = 2;
   string signature = 3;
 }
@@ -279,7 +259,7 @@ message VerifyTransactionResponse {
 }
 
 message DecodeTransactionRequest {
-  string chain = 1;
+  string network = 1;
   bytes raw_data = 2;
   repeated Vin vins = 3;
 }
@@ -298,10 +278,8 @@ message DecodeTransactionResponse {
 }
 
 service WalletBtcService {
-  rpc getSupportChains(SupportChainsRequest) returns (SupportChainsResponse) {}
   rpc convertAddress(ConvertAddressRequest) returns(ConvertAddressResponse){}
   rpc validAddress(ValidAddressRequest) returns(ValidAddressResponse){}
-  rpc getFee(FeeRequest) returns (FeeResponse) {}
   rpc getAccount(AccountRequest) returns (AccountResponse) {}
   rpc getUnspentOutputs(UnspentOutputsRequest) returns (UnspentOutputsResponse) {}
   rpc getBlockByNumber(BlockNumberRequest) returns (BlockResponse) {}

@@ -84,7 +84,7 @@ type BlockData struct {
 	MedianTime        uint64   `json:"mediantime"`
 	Nonce             uint64   `json:"nonce"`
 	Bits              string   `json:"bits"`
-	Difficulty        uint64   `json:"difficulty"`
+	Difficulty        float64  `json:"difficulty"`
 	ChainWork         string   `json:"chainwork"`
 	NTx               uint64   `json:"nTx"`
 	PreviousBlockHash string   `json:"previousblockhash"`
@@ -108,14 +108,14 @@ type ScriptPubKey struct {
 	Asm     string `json:"asm"`
 	Hex     string `json:"hex"`
 	Desc    string `json:"desc"`
-	Address string `json:"addresses"`
+	Address string `json:"address"`
 	Type    string `json:"type"`
 }
 
 type Vout struct {
-	Value        uint64       `json:"value"`
+	Value        float64      `json:"value"`
 	N            uint64       `json:"n"`
-	ScriptPubKey ScriptPubKey `json:"scriptpubkey"`
+	ScriptPubKey ScriptPubKey `json:"scriptPubKey"`
 }
 
 type RawTransactionData struct {

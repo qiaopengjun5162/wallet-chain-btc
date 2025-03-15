@@ -22,17 +22,9 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 
+	"github.com/dapplink-labs/wallet-chain-btc/bitcoin/types"
 	"github.com/dapplink-labs/wallet-chain-btc/proto/btc"
-	"github.com/dapplink-labs/wallet-chain-utxo/chain/bitcoin/types"
 )
-
-func (wbs *WalletBtcService) GetSupportChains(ctx context.Context, req *btc.SupportChainsRequest) (*btc.SupportChainsResponse, error) {
-	return &btc.SupportChainsResponse{
-		Code:    btc.ReturnCode_SUCCESS,
-		Msg:     "Support this chain",
-		Support: true,
-	}, nil
-}
 
 func (wbs *WalletBtcService) ConvertAddress(ctx context.Context, req *btc.ConvertAddressRequest) (*btc.ConvertAddressResponse, error) {
 	var address string
@@ -109,25 +101,6 @@ func (wbs *WalletBtcService) ValidAddress(ctx context.Context, req *btc.ValidAdd
 		Code:  btc.ReturnCode_SUCCESS,
 		Msg:   "verify address success",
 		Valid: true,
-	}, nil
-}
-
-func (wbs *WalletBtcService) GetFee(ctx context.Context, req *btc.FeeRequest) (*btc.FeeResponse, error) {
-	gasFeeResp, err := wbs.btcDataClient.GetFee()
-	if err != nil {
-		return &btc.FeeResponse{
-			Code: btc.ReturnCode_ERROR,
-			Msg:  err.Error(),
-		}, err
-	}
-	return &btc.FeeResponse{
-		Code:       btc.ReturnCode_SUCCESS,
-		Msg:        "get fee success",
-		BestFee:    gasFeeResp.BestTransactionFee,
-		BestFeeSat: gasFeeResp.BestTransactionFeeSat,
-		SlowFee:    gasFeeResp.SlowGasPrice,
-		NormalFee:  gasFeeResp.StandardGasPrice,
-		FastFee:    gasFeeResp.RapidGasPrice,
 	}, nil
 }
 
@@ -211,10 +184,11 @@ func (wbs *WalletBtcService) GetBlockByNumber(ctx context.Context, req *btc.Bloc
 		var vinList []*btc.Vin
 		for _, vin := range rawTx.Vin {
 			vinItem := &btc.Vin{
-				Hash:    vin.TxId,
-				Index:   uint32(vin.Vout),
-				Amount:  10,
-				Address: vin.ScriptSig.Asm,
+				Hash:     vin.TxId,
+				Vout:     uint32(vin.Vout),
+				Amount:   0,
+				Address:  vin.ScriptSig.Asm,
+				Sequence: vin.Sequence,
 			}
 			vinList = append(vinList, vinItem)
 		}
@@ -222,7 +196,15 @@ func (wbs *WalletBtcService) GetBlockByNumber(ctx context.Context, req *btc.Bloc
 		for _, vout := range rawTx.Vout {
 			voutItem := &btc.Vout{
 				Address: vout.ScriptPubKey.Address,
-				Amount:  int64(vout.Value),
+				Amount:  strconv.FormatFloat(vout.Value, 'f', -1, 64),
+				Index:   uint32(vout.N),
+				ScriptPubKey: &btc.ScriptPubKey{
+					Asm:     vout.ScriptPubKey.Asm,
+					Desc:    vout.ScriptPubKey.Desc,
+					Hex:     vout.ScriptPubKey.Hex,
+					Address: vout.ScriptPubKey.Address,
+					Type:    vout.ScriptPubKey.Type,
+				},
 			}
 			voutList = append(voutList, voutItem)
 		}
@@ -235,7 +217,7 @@ func (wbs *WalletBtcService) GetBlockByNumber(ctx context.Context, req *btc.Bloc
 	}
 	return &btc.BlockResponse{
 		Code:   btc.ReturnCode_SUCCESS,
-		Msg:    "get block by number succcess",
+		Msg:    "get block by number success",
 		Height: uint64(req.Height),
 		Hash:   blockHash.String(),
 		TxList: txList,
@@ -247,11 +229,18 @@ func (wbs *WalletBtcService) GetBlockByHash(ctx context.Context, req *btc.BlockH
 	numBlocksJSON, _ := json.Marshal(req.Hash)
 	params = []json.RawMessage{numBlocksJSON}
 	block, _ := wbs.btcClient.Client.RawRequest("getblock", params)
+
+	log.Info("get block success", "block", block)
+
 	var resultBlock types.BlockData
+
 	err := json.Unmarshal(block, &resultBlock)
 	if err != nil {
 		log.Error("Unmarshal json fail", "err", err)
 	}
+
+	log.Info("parse block success", "resultBlock", resultBlock)
+
 	var txList []*btc.TransactionList
 	for _, txid := range resultBlock.Tx {
 		txIdJson, _ := json.Marshal(txid)
@@ -270,10 +259,11 @@ func (wbs *WalletBtcService) GetBlockByHash(ctx context.Context, req *btc.BlockH
 		var vinList []*btc.Vin
 		for _, vin := range rawTx.Vin {
 			vinItem := &btc.Vin{
-				Hash:    vin.TxId,
-				Index:   uint32(vin.Vout),
-				Amount:  10,
-				Address: vin.ScriptSig.Asm,
+				Hash:     vin.TxId,
+				Vout:     uint32(vin.Vout),
+				Amount:   0,
+				Address:  vin.ScriptSig.Asm,
+				Sequence: vin.Sequence,
 			}
 			vinList = append(vinList, vinItem)
 		}
@@ -281,7 +271,15 @@ func (wbs *WalletBtcService) GetBlockByHash(ctx context.Context, req *btc.BlockH
 		for _, vout := range rawTx.Vout {
 			voutItem := &btc.Vout{
 				Address: vout.ScriptPubKey.Address,
-				Amount:  int64(vout.Value),
+				Amount:  strconv.FormatFloat(vout.Value, 'f', -1, 64),
+				Index:   uint32(vout.N),
+				ScriptPubKey: &btc.ScriptPubKey{
+					Asm:     vout.ScriptPubKey.Asm,
+					Desc:    vout.ScriptPubKey.Desc,
+					Hex:     vout.ScriptPubKey.Hex,
+					Address: vout.ScriptPubKey.Address,
+					Type:    vout.ScriptPubKey.Type,
+				},
 			}
 			voutList = append(voutList, voutItem)
 		}
@@ -294,7 +292,7 @@ func (wbs *WalletBtcService) GetBlockByHash(ctx context.Context, req *btc.BlockH
 	}
 	return &btc.BlockResponse{
 		Code:   btc.ReturnCode_SUCCESS,
-		Msg:    "get block by number succcess",
+		Msg:    "get block by hash success",
 		Height: resultBlock.Height,
 		Hash:   req.Hash,
 		TxList: txList,
@@ -316,14 +314,16 @@ func (wbs *WalletBtcService) GetBlockHeaderByHash(ctx context.Context, req *btc.
 	return &btc.BlockHeaderResponse{
 		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "get block header success",
-		ParentHash: blockHeader.PrevBlock.String(),
-		Number:     string(blockHeader.Version),
+		PrevHash:   blockHeader.PrevBlock.String(),
+		Number:     "nil",
 		BlockHash:  req.Hash,
 		MerkleRoot: blockHeader.MerkleRoot.String(),
+		Time:       uint64(blockHeader.Timestamp.Unix()),
 	}, nil
 }
 
 func (wbs *WalletBtcService) GetBlockHeaderByNumber(ctx context.Context, req *btc.BlockHeaderNumberRequest) (*btc.BlockHeaderResponse, error) {
+	log.Info("start get block header by number")
 	blockNumber := req.Height
 	if req.Height == 0 {
 		latestBlock, err := wbs.btcClient.Client.GetBlockCount()
@@ -333,6 +333,7 @@ func (wbs *WalletBtcService) GetBlockHeaderByNumber(ctx context.Context, req *bt
 				Msg:  "get latest block fail",
 			}, err
 		}
+		log.Info("get block header success", "latestBlock", latestBlock)
 		blockNumber = latestBlock
 	}
 	blockHash, err := wbs.btcClient.Client.GetBlockHash(blockNumber)
@@ -343,6 +344,7 @@ func (wbs *WalletBtcService) GetBlockHeaderByNumber(ctx context.Context, req *bt
 			Msg:  "get block hash fail",
 		}, err
 	}
+	log.Info("get block hash success", "blockHash", blockHash)
 	blockHeader, err := wbs.btcClient.Client.GetBlockHeader(blockHash)
 	if err != nil {
 		return &btc.BlockHeaderResponse{
@@ -353,10 +355,11 @@ func (wbs *WalletBtcService) GetBlockHeaderByNumber(ctx context.Context, req *bt
 	return &btc.BlockHeaderResponse{
 		Code:       btc.ReturnCode_SUCCESS,
 		Msg:        "get block header success",
-		ParentHash: blockHeader.PrevBlock.String(),
+		PrevHash:   blockHeader.PrevBlock.String(),
 		Number:     strconv.FormatInt(blockNumber, 10),
 		BlockHash:  blockHash.String(),
 		MerkleRoot: blockHeader.MerkleRoot.String(),
+		Time:       uint64(blockHeader.Timestamp.Unix()),
 	}, nil
 }
 
@@ -668,7 +671,7 @@ func (wbs *WalletBtcService) CalcSignHashes(Vins []*btc.Vin, Vouts []*btc.Vout) 
 		if err != nil {
 			return nil, nil, err
 		}
-		txIn := wire.NewTxIn(wire.NewOutPoint(utxoHash, in.Index), nil, nil)
+		txIn := wire.NewTxIn(wire.NewOutPoint(utxoHash, in.Vout), nil, nil)
 		rawTx.AddTxIn(txIn)
 	}
 	for _, out := range Vouts {
@@ -680,7 +683,7 @@ func (wbs *WalletBtcService) CalcSignHashes(Vins []*btc.Vin, Vouts []*btc.Vout) 
 		if err != nil {
 			return nil, nil, err
 		}
-		rawTx.AddTxOut(wire.NewTxOut(out.Amount, toPkScript))
+		rawTx.AddTxOut(wire.NewTxOut(1, toPkScript))
 	}
 	log.Info("raw Transaction", "rawTx", rawTx.SerializeSize())
 
@@ -782,8 +785,8 @@ func (wbs *WalletBtcService) DecodeVouts(msgTx wire.MsgTx) ([]*btc.Vout, *big.In
 			return nil, nil, err
 		}
 		t.Address = pubkeyAddrs[0].EncodeAddress()
-		t.Amount = out.Value
-		totalAmountOut.Add(totalAmountOut, big.NewInt(t.Amount))
+		t.Amount = "1"
+		totalAmountOut.Add(totalAmountOut, big.NewInt(1))
 		outs = append(outs, &t)
 	}
 	return outs, totalAmountOut, nil
@@ -801,13 +804,13 @@ func (wbs *WalletBtcService) GetVin(offline bool, vins []*btc.Vin, index int, in
 		out := preTx.Vout[in.PreviousOutPoint.Index]
 		vin = &btc.Vin{
 			Hash:    "",
-			Index:   0,
+			Vout:    0,
 			Amount:  btcToSatoshi(out.Value).Int64(),
 			Address: out.ScriptPubKey.Address,
 		}
 	}
 	vin.Hash = in.PreviousOutPoint.Hash.String()
-	vin.Index = in.PreviousOutPoint.Index
+	vin.Vout = in.PreviousOutPoint.Index
 	return vin, nil
 }
 
