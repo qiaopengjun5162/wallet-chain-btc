@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"github.com/dapplink-labs/wallet-chain-btc/bitcoin"
 	"math/big"
 	"strconv"
 	"strings"
@@ -25,6 +26,8 @@ import (
 	"github.com/dapplink-labs/wallet-chain-btc/bitcoin/types"
 	"github.com/dapplink-labs/wallet-chain-btc/proto/btc"
 )
+
+const BtcDecimal = 10e7
 
 func (wbs *WalletBtcService) ConvertAddress(ctx context.Context, req *btc.ConvertAddressRequest) (*btc.ConvertAddressResponse, error) {
 	var address string
@@ -183,20 +186,32 @@ func (wbs *WalletBtcService) GetBlockByNumber(ctx context.Context, req *btc.Bloc
 		}
 		var vinList []*btc.Vin
 		for _, vin := range rawTx.Vin {
+			log.Info("Vin script and witness", "vinScriptSigHex", vin.ScriptSig.Hex, "vinTxInWitness", vin.TxInWitness)
+			var btcAddress string
+			if vin.ScriptSig.Hex == "" && len(vin.TxInWitness) > 0 {
+				if len(vin.TxInWitness) >= 2 {
+					btcAddress, _ = bitcoin.ExtractMultiAddress(vin.TxInWitness[1])
+				} else {
+					btcAddress, _ = bitcoin.ExtractNonMultiAddress(vin.TxInWitness[0])
+				}
+			} else {
+				btcAddress, _ = bitcoin.ExtractAddressesFromVinScriptSigHex(vin.ScriptSig.Hex)
+			}
 			vinItem := &btc.Vin{
 				Hash:     vin.TxId,
 				Vout:     uint32(vin.Vout),
 				Amount:   0,
-				Address:  vin.ScriptSig.Asm,
+				Address:  btcAddress,
 				Sequence: vin.Sequence,
 			}
 			vinList = append(vinList, vinItem)
 		}
 		var voutList []*btc.Vout
 		for _, vout := range rawTx.Vout {
+			voutAmount := vout.Value * BtcDecimal
 			voutItem := &btc.Vout{
 				Address: vout.ScriptPubKey.Address,
-				Amount:  strconv.FormatFloat(vout.Value, 'f', -1, 64),
+				Amount:  uint64(voutAmount),
 				Index:   uint32(vout.N),
 				ScriptPubKey: &btc.ScriptPubKey{
 					Asm:     vout.ScriptPubKey.Asm,
@@ -258,20 +273,35 @@ func (wbs *WalletBtcService) GetBlockByHash(ctx context.Context, req *btc.BlockH
 		}
 		var vinList []*btc.Vin
 		for _, vin := range rawTx.Vin {
+			if vin.TxId == "" { // coinbase tx
+				continue
+			}
+			log.Info("Vin script and witness", "vinScriptSigHex", vin.ScriptSig.Hex, "vinTxInWitness", vin.TxInWitness)
+			var btcAddress string
+			if vin.ScriptSig.Hex == "" && len(vin.TxInWitness) > 0 {
+				if len(vin.TxInWitness) >= 2 {
+					btcAddress, _ = bitcoin.ExtractMultiAddress(vin.TxInWitness[1])
+				} else {
+					btcAddress, _ = bitcoin.ExtractNonMultiAddress(vin.TxInWitness[0])
+				}
+			} else {
+				btcAddress, _ = bitcoin.ExtractAddressesFromVinScriptSigHex(vin.ScriptSig.Hex)
+			}
 			vinItem := &btc.Vin{
 				Hash:     vin.TxId,
 				Vout:     uint32(vin.Vout),
 				Amount:   0,
-				Address:  vin.ScriptSig.Asm,
+				Address:  btcAddress,
 				Sequence: vin.Sequence,
 			}
 			vinList = append(vinList, vinItem)
 		}
 		var voutList []*btc.Vout
 		for _, vout := range rawTx.Vout {
+			voutAmount := vout.Value * BtcDecimal
 			voutItem := &btc.Vout{
 				Address: vout.ScriptPubKey.Address,
-				Amount:  strconv.FormatFloat(vout.Value, 'f', -1, 64),
+				Amount:  uint64(voutAmount),
 				Index:   uint32(vout.N),
 				ScriptPubKey: &btc.ScriptPubKey{
 					Asm:     vout.ScriptPubKey.Asm,
@@ -769,7 +799,7 @@ func (wbs *WalletBtcService) DecodeVins(msgTx wire.MsgTx, offline bool, vins []*
 				return nil, nil, err
 			}
 		}
-		totalAmountIn.Add(totalAmountIn, big.NewInt(vin.Amount))
+		totalAmountIn.Add(totalAmountIn, big.NewInt(int64(vin.Amount)))
 		ins = append(ins, vin)
 	}
 	return ins, totalAmountIn, nil
@@ -785,7 +815,7 @@ func (wbs *WalletBtcService) DecodeVouts(msgTx wire.MsgTx) ([]*btc.Vout, *big.In
 			return nil, nil, err
 		}
 		t.Address = pubkeyAddrs[0].EncodeAddress()
-		t.Amount = "1"
+		t.Amount = 1
 		totalAmountOut.Add(totalAmountOut, big.NewInt(1))
 		outs = append(outs, &t)
 	}
@@ -805,7 +835,7 @@ func (wbs *WalletBtcService) GetVin(offline bool, vins []*btc.Vin, index int, in
 		vin = &btc.Vin{
 			Hash:    "",
 			Vout:    0,
-			Amount:  btcToSatoshi(out.Value).Int64(),
+			Amount:  btcToSatoshi(out.Value).Uint64(),
 			Address: out.ScriptPubKey.Address,
 		}
 	}
@@ -825,7 +855,7 @@ func (wbs *WalletBtcService) VerifySign(vin *btc.Vin, msgTx wire.MsgTx, index in
 		return err
 	}
 
-	vm, err := txscript.NewEngine(fromPkScript, &msgTx, index, txscript.StandardVerifyFlags, nil, nil, vin.Amount, nil)
+	vm, err := txscript.NewEngine(fromPkScript, &msgTx, index, txscript.StandardVerifyFlags, nil, nil, int64(vin.Amount), nil)
 	if err != nil {
 		return err
 	}

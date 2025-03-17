@@ -19,7 +19,7 @@ enum TxStatus{
 message Vin{
   string hash = 1;
   uint32 vout = 2;
-  int64  amount = 3;
+  uint64  amount = 3;
   string address = 4;
   uint64 sequence = 5;
 }
@@ -34,7 +34,7 @@ message ScriptPubKey {
 
 message Vout{
   string address = 1;
-  string amount = 2;
+  uint64 amount = 2;
   uint32 index = 3;
   ScriptPubKey script_pubKey = 4;
 }
